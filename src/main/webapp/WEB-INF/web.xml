@@ -1,25 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  web.xml - Servlet Deployment Descriptor
+  This is the entry point for the web application. Tomcat reads this file first
+  when the application starts up to configure servlets and filters.
+-->
 <web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd"
          version="6.0">
 
+    <!-- Display name shown in Tomcat manager and other admin tools -->
     <display-name>POS System Spring Web MVC</display-name>
 
+    <!--
+      DispatcherServlet Configuration
+      This is Spring's front controller that handles all HTTP requests and routes them
+      to the appropriate @Controller methods based on @RequestMapping annotations.
+    -->
     <servlet>
         <servlet-name>dispatcherServlet</servlet-name>
+        <!-- Spring's DispatcherServlet class -->
         <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+
+        <!--
+          Use Java-based configuration instead of XML
+          AnnotationConfigWebApplicationContext enables @Configuration classes
+        -->
         <init-param>
             <param-name>contextClass</param-name>
             <param-value>org.springframework.web.context.support.AnnotationConfigWebApplicationContext</param-value>
         </init-param>
+
+        <!--
+          Point to our main Spring configuration class
+          This class contains all bean definitions (@Bean methods) and component scanning
+        -->
         <init-param>
             <param-name>contextConfigLocation</param-name>
             <param-value>com.pos.config.WebMvcConfig</param-value>
         </init-param>
+
+        <!-- Load this servlet on startup (1 = highest priority) -->
         <load-on-startup>1</load-on-startup>
     </servlet>
 
+    <!--
+      Servlet Mapping
+      Maps all URL patterns (/) to the DispatcherServlet
+      This means ALL requests go through Spring's MVC framework
+    -->
     <servlet-mapping>
         <servlet-name>dispatcherServlet</servlet-name>
         <url-pattern>/</url-pattern>
