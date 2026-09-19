@@ -7,3 +7,36 @@
 
 </beans>
 
+<!--
+
+you don't need applicationContext.xml. It's empty and never loaded.
+
+Why It's Not Used
+Current Configuration:
+
+web.xml loads WebMvcConfig.java (Java-based configuration)
+All Spring beans are defined in WebMvcConfig.java
+No ContextLoaderListener in web.xml to load a root context
+Classic Two-Context Model (Not Used Here): Traditionally, Spring MVC had two contexts:
+
+Root context (applicationContext.xml) - Services, DAOs, database config
+Servlet context (servlet-config.xml) - Controllers, view resolvers
+Your project uses a single Java-based context (WebMvcConfig.java) that handles everything.
+
+Can You Delete It?
+Yes. You can safely delete:
+
+applicationContext.xml (empty, never loaded)
+servlet-config.xml (also in resources, never loaded)
+Both are legacy XML configs that were replaced by WebMvcConfig.java.
+
+Your Active Configuration
+
+
+web.xml → DispatcherServlet → WebMvcConfig.java
+                                      ↓
+                            All beans (DataSource, Hibernate,
+                            TransactionManager, ComponentScan)
+Delete applicationContext.xml to clean up the unused legacy file.
+
+-->

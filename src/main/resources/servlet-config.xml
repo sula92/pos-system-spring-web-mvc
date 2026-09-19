@@ -38,3 +38,46 @@
 
 </beans>
 
+<!--
+
+you don't need servlet-config.xml. It's legacy XML configuration that's been replaced by WebMvcConfig.java.
+
+Why It's Not Used
+Current Configuration:
+
+web.xml loads WebMvcConfig.java (Java-based configuration)
+WebMvcConfig.java handles everything this XML file does
+What servlet-config.xml Does (Replaced by WebMvcConfig):
+
+XML Feature	WebMvcConfig Equivalent
+<context:component-scan>	@ComponentScan("com.pos")
+<mvc:annotation-driven/>	@EnableWebMvc
+<mvc:cors>	@CrossOrigin on controllers
+CORS Configuration
+In servlet-config.xml (unused):
+
+
+
+xml
+<mvc:cors>
+    <mvc:mapping path="/customer/**" allowed-origins="http://localhost:5173" .../>
+</mvc:cors>
+In Controllers (active):
+
+
+
+java
+@RestController
+@RequestMapping("/customer")
+@CrossOrigin(origins = "http://localhost:5173")  // This is used
+public class CustomerController { }
+Can You Delete It?
+Yes. You can safely delete servlet-config.xml because:
+
+It's never loaded by web.xml
+All its functionality is in WebMvcConfig.java
+CORS is handled by @CrossOrigin annotations on controllers
+Delete it to clean up the unused legacy XML configuration.
+
+-->
+

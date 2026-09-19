@@ -55,3 +55,54 @@
     </servlet-mapping>
 
 </web-app>
+
+
+<!--
+
+you need web.xml for traditional Spring MVC (unless you switch to Java-based configuration).
+
+Why web.xml Is Needed
+Current Setup (Traditional Spring MVC):
+
+web.xml registers the DispatcherServlet with Tomcat
+Points to WebMvcConfig.java for Spring configuration
+This is the entry point for the web application
+Without web.xml:
+
+Tomcat wouldn't know how to load Spring
+DispatcherServlet wouldn't be registered
+Application wouldn't start
+Alternative: Java-Based Configuration
+If you want to remove web.xml, you can use DispatcherServletInitializer.java instead:
+
+Enable it by:
+
+Delete web.xml
+Modify DispatcherServletInitializer.java:
+
+
+java
+public class DispatcherServletInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+    @Override
+    protected Class<?>[] getRootConfigClasses() {
+        return new Class[]{};
+    }
+
+    @Override
+    protected Class<?>[] getServletConfigClasses() {
+        return new Class[]{WebMvcConfig.class};
+    }
+
+    @Override
+    protected String[] getServletMappings() {
+        return new String[]{"/"};
+    }
+}
+Summary
+Approach	Files Needed
+Current (XML)	web.xml + WebMvcConfig.java
+Alternative (Java)	DispatcherServletInitializer.java + WebMvcConfig.java
+Spring Boot	None (auto-configured)
+Recommendation: Keep web.xml - it's simpler for traditional servlet containers and your current setup is working fine
+
+-->

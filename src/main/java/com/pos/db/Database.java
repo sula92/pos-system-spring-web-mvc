@@ -96,3 +96,32 @@ public class Database {
         }
     }
 }
+
+/*
+* you don't need the Database class. It's legacy JDBC code that's redundant with your current Hibernate setup.
+
+Why It's Redundant
+Your current application uses:
+
+Hibernate - Automatically creates/drops tables via hibernate.ddl-auto=create-drop
+Spring Data JPA - Handles all database operations through repositories
+JPA Entities - Define schema via annotations
+The Database class uses manual JDBC which has been replaced by Hibernate/JPA.
+
+What You Can Delete
+You can safely delete:
+
+Database.java
+IdGenerator.java (also in com.pos.db package)
+These are from an older JDBC-based implementation that's no longer used.
+
+Current Schema Management
+Hibernate automatically manages your database schema based on entity classes:
+
+CustomerEntity → customers table
+ItemEntity → items table
+OrderEntity → orders table
+OrderDetailEntity → order_details table
+Delete the entire com.pos.db package to clean up the legacy code.
+*
+* */
