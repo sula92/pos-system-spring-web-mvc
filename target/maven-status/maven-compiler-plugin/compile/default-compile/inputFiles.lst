@@ -1,25 +1,41 @@
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\config\DispatcherServletInitializer.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\config\WebMvcConfig.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\controller\CustomerController.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\controller\ItemController.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\controller\OrderController.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\db\Database.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\db\IdGenerator.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\dto\CustomerDTO.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\dto\ItemDTO.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\dto\OrderDetailDTO.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\dto\OrderDTO.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\entity\CustomerEntity.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\entity\ItemEntity.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\entity\OrderDetailEntity.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\entity\OrderDetailId.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\entity\OrderEntity.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\listener\ApplicationStartupListener.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\repository\CustomerRepository.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\repository\ItemRepository.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\repository\OrderDetailRepository.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\repository\OrderRepository.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\service\CustomerService.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\service\ItemService.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\com\pos\service\OrderService.java
-C:\Users\ASUS\IdeaProjects\POS-System\pos-system-spring-web-mvc\src\main\java\org\example\App.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\aop\AuditAspect.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\aop\ExceptionTracingAspect.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\aop\PerformanceAspect.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\config\DispatcherServletInitializer.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\config\WebMvcConfig.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\controller\CustomerController.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\controller\InventoryController.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\controller\ItemController.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\controller\OrderController.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\dto\CustomerDTO.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\dto\CustomerPurchaseStatsDTO.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\dto\InventoryDTO.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\dto\InventoryStockValueView.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\dto\ItemDTO.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\dto\OrderDetailDTO.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\dto\OrderDTO.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\dto\OrderSummaryDTO.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\entity\Customer.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\entity\Inventory.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\entity\Item.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\entity\Order.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\entity\OrderDetail.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\entity\OrderDetailId.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\exception\handler\GlobalExceptionHandler.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\exception\InsufficientStockException.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\exception\InvalidRequestException.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\exception\ResourceNotFoundException.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\listener\ApplicationStartupListener.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\projection\CustomerPurchaseStatsProjection.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\projection\InventoryStockViewProjection.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\projection\OrderSummaryProjection.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\repository\CustomerRepository.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\repository\InventoryRepository.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\repository\ItemRepository.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\repository\OrderDetailRepository.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\repository\OrderRepository.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\service\CustomerService.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\service\InventoryService.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\service\ItemService.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\com\pos\service\OrderService.java
+C:\Users\ASUS\IdeaProjects\New folder\pos-system-spring-web-mvc\src\main\java\org\example\App.java

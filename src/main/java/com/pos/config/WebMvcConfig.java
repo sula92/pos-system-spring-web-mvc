@@ -2,16 +2,17 @@ package com.pos.config;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManagerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.ViewResolver;
@@ -34,10 +35,45 @@ import java.util.Map;
  */
 @Configuration
 @EnableWebMvc
+@EnableAspectJAutoProxy
 @EnableTransactionManagement  // Enable @Transactional annotation processing. //without this annotation, @Transactional will not work
 @ComponentScan("com.pos")
 @EnableJpaRepositories("com.pos.repository")  // Enable Spring Data JPA repository scanning. without this annotation, @Repository will not work
+@PropertySource("classpath:application.properties")
 public class WebMvcConfig {
+
+    @Value("${spring.datasource.driver-class-name:org.postgresql.Driver}")
+    private String dbDriver;
+
+    @Value("${spring.datasource.url:jdbc:postgresql://localhost:5432/pos_system}")
+    private String dbUrl;
+
+    @Value("${spring.datasource.username:postgres}")
+    private String dbUser;
+
+    @Value("${spring.datasource.password:postgres}")
+    private String dbPassword;
+
+    @Value("${spring.jpa.database-platform:org.hibernate.dialect.PostgreSQLDialect}")
+    private String hibernateDialect;
+
+    @Value("${spring.jpa.hibernate.ddl-auto:create-drop}")
+    private String hibernateDdlAuto;
+
+    @Value("${spring.jpa.show-sql:true}")
+    private boolean showSql;
+
+    @Value("${spring.jpa.properties.hibernate.format_sql:true}")
+    private boolean formatSql;
+
+    @Value("${spring.jpa.properties.hibernate.use_sql_comments:true}")
+    private boolean useSqlComments;
+
+    // Enables ${...} placeholder resolution for @Value in non-Boot Spring MVC config.
+    @Bean
+    public static org.springframework.context.support.PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+        return new org.springframework.context.support.PropertySourcesPlaceholderConfigurer();
+    }
 
     /**
      * Configure DataSource (Database Connection)
@@ -47,16 +83,10 @@ public class WebMvcConfig {
     @Bean
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName("org.postgresql.Driver");
-        dataSource.setUrl(
-            System.getenv().getOrDefault("POS_DB_URL", "jdbc:postgresql://localhost:5432/pos_system")
-        );
-        dataSource.setUsername(
-            System.getenv().getOrDefault("POS_DB_USER", "postgres")
-        );
-        dataSource.setPassword(
-            System.getenv().getOrDefault("POS_DB_PASSWORD", "postgres")
-        );
+        dataSource.setDriverClassName(dbDriver);
+        dataSource.setUrl(dbUrl);
+        dataSource.setUsername(dbUser);
+        dataSource.setPassword(dbPassword);
         return dataSource;
     }
 
@@ -77,12 +107,12 @@ public class WebMvcConfig {
         
         // Hibernate configuration properties
         Map<String, Object> properties = new HashMap<>();
-        properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
-        properties.put("hibernate.ddl-auto", "create-drop");  // Automatically create/drop tables
-        properties.put("hibernate.show_sql", true);
-        properties.put("hibernate.format_sql", true);
-        properties.put("hibernate.use_sql_comments", true);
-        
+        properties.put("hibernate.dialect", hibernateDialect);
+        properties.put("hibernate.ddl-auto", hibernateDdlAuto);  // Automatically create/drop tables
+        properties.put("hibernate.show_sql", showSql);
+        properties.put("hibernate.format_sql", formatSql);
+        properties.put("hibernate.use_sql_comments", useSqlComments);
+
         emf.setJpaPropertyMap(properties);
         return emf;
     }

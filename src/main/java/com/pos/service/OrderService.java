@@ -2,14 +2,19 @@ package com.pos.service;
 
 import com.pos.dto.OrderDTO;
 import com.pos.dto.OrderDetailDTO;
-import com.pos.entity.OrderEntity;
-import com.pos.entity.OrderDetailEntity;
-import com.pos.entity.OrderDetailId;
-import com.pos.entity.CustomerEntity;
-import com.pos.entity.ItemEntity;
+import com.pos.dto.OrderSummaryDTO;
+import com.pos.entity.Inventory;
+import com.pos.entity.Order;
+import com.pos.entity.OrderDetail;
+import com.pos.entity.Customer;
+import com.pos.exception.InsufficientStockException;
+import com.pos.exception.InvalidRequestException;
+import com.pos.exception.ResourceNotFoundException;
+import com.pos.projection.OrderSummaryProjection;
 import com.pos.repository.OrderRepository;
 import com.pos.repository.OrderDetailRepository;
 import com.pos.repository.CustomerRepository;
+import com.pos.repository.InventoryRepository;
 import com.pos.repository.ItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,7 +24,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -44,6 +48,9 @@ public class OrderService {
     private ItemRepository itemRepository;
 
     @Autowired
+    private InventoryRepository inventoryRepository;
+
+    @Autowired
     private CustomerRepository customerRepository;
 
     /**
@@ -65,33 +72,46 @@ public class OrderService {
         // VALIDATION: Check if order request is valid
         if (!isValidOrderRequest(dto)) {
             logger.warning("Service: Invalid order request");
-            throw new IllegalArgumentException("Invalid order request");
+            throw new InvalidRequestException("Invalid order request");
         }
 
         // VALIDATION: Check if customer exists
-        CustomerEntity customer = customerRepository.findById(dto.getCustomerId())
-                .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + dto.getCustomerId()));
+        Customer customer = customerRepository.findById(dto.getCustomerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + dto.getCustomerId()));
         logger.info("Service: Customer found: " + customer.getId());
 
-        // VALIDATION: Pre-check all items are available and in stock
-        Map<String, ItemEntity> itemCache = new HashMap<>();
+        // VALIDATION: Aggregate quantities per item first to prevent duplicate-line overselling.
+        Map<String, Integer> requestedQtyByItem = new HashMap<>();
         for (OrderDetailDTO detail : dto.getOrderDetails()) {
             if (!isValidOrderDetail(detail)) {
-                throw new IllegalArgumentException("Invalid order detail for item: " + detail.getItemCode());
+                throw new InvalidRequestException("Invalid order detail for item: " + detail.getItemCode());
             }
 
-            ItemEntity item = itemRepository.findById(detail.getItemCode())
-                    .orElseThrow(() -> new IllegalArgumentException("Item not found: " + detail.getItemCode()));
+            itemRepository.findById(detail.getItemCode())
+                    .orElseThrow(() -> new ResourceNotFoundException("Item not found: " + detail.getItemCode()));
 
-            if (item.getQtyOnHAnd() < detail.getQty()) {
-                throw new IllegalArgumentException("Insufficient stock for item: " + detail.getItemCode());
+            requestedQtyByItem.merge(detail.getItemCode(), detail.getQty(), Integer::sum);
+        }
+
+        // VALIDATION: Pre-check all items are available and in stock
+        Map<String, Inventory> inventoryCache = new HashMap<>();
+        for (Map.Entry<String, Integer> requestedQty : requestedQtyByItem.entrySet()) {
+            String itemCode = requestedQty.getKey();
+            int totalRequestedQty = requestedQty.getValue();
+
+            // Lock inventory rows while checking stock so concurrent orders cannot oversell.
+            Inventory inventory = inventoryRepository.findByItemCodeForUpdate(itemCode)
+                    .orElseThrow(() -> new ResourceNotFoundException("Inventory not found for item: " + itemCode));
+
+            if (inventory.getQty() < totalRequestedQty) {
+                throw new InsufficientStockException("Insufficient stock for item: " + itemCode);
             }
-            itemCache.put(detail.getItemCode(), item);
+            inventoryCache.put(itemCode, inventory);
         }
         logger.info("Service: All items validated and in stock");
 
         // GENERATE: Create new order with existing date or today's date
-        OrderEntity orderEntity = new OrderEntity(
+        Order orderEntity = new Order(
                 generateOrderId(),
                 dto.getDate() != null ? dto.getDate() : LocalDate.now(),
                 dto.getCustomerId()
@@ -99,7 +119,7 @@ public class OrderService {
         logger.info("Service: Generated order ID: " + orderEntity.getOrderId());
 
         // SAVE: Persist the main order record
-        OrderEntity savedOrder = orderRepository.save(orderEntity);
+        Order savedOrder = orderRepository.save(orderEntity);
         logger.info("Service: Order record saved: " + savedOrder.getOrderId());
 
         // PROCESS: Save each order detail and update item stock
@@ -107,16 +127,15 @@ public class OrderService {
             detail.setOrderId(savedOrder.getOrderId());
 
             // SAVE: Persist the order detail record
-            OrderDetailId detailId = new OrderDetailId(savedOrder.getOrderId(), detail.getItemCode());
-            OrderDetailEntity detailEntity = new OrderDetailEntity(
+            OrderDetail detailEntity = new OrderDetail(
                     savedOrder.getOrderId(), detail.getItemCode(), detail.getQty(), detail.getUnitPrice());
             orderDetailRepository.save(detailEntity);
             logger.info("Service: Order detail saved: " + savedOrder.getOrderId() + " - " + detail.getItemCode());
 
-            // UPDATE: Deduct stock from the Item table
-            ItemEntity item = itemCache.get(detail.getItemCode());
-            item.setQtyOnHAnd(item.getQtyOnHAnd() - detail.getQty());
-            itemRepository.save(item);
+            // UPDATE: Deduct stock from the Inventory table in the same transaction.
+            Inventory inventory = inventoryCache.get(detail.getItemCode());
+            inventory.setQty(inventory.getQty() - detail.getQty());
+            inventoryRepository.save(inventory);
             logger.info("Service: Item stock updated: " + detail.getItemCode());
         }
 
@@ -124,7 +143,7 @@ public class OrderService {
 
         // BUILD: Return the complete order DTO with all details
         List<OrderDetailDTO> detailDTOs = new ArrayList<>();
-        for (OrderDetailEntity d : orderDetailRepository.findByOrderId(savedOrder.getOrderId())) {
+        for (OrderDetail d : orderDetailRepository.findByOrderId(savedOrder.getOrderId())) {
             detailDTOs.add(new OrderDetailDTO(d.getOrderId(), d.getItemCode(), d.getQty(), d.getUnitPrice()));
         }
         return new OrderDTO(savedOrder.getOrderId(), savedOrder.getDate(), savedOrder.getCustomerId(), detailDTOs);
@@ -135,12 +154,12 @@ public class OrderService {
      */
     @Transactional(readOnly = true)
     public OrderDTO findOrder(String id) {
-        OrderEntity orderEntity = orderRepository.findById(id).orElse(null);
-        if (orderEntity == null) return null;
+        // Uses JOIN FETCH query so order + details are loaded in one roundtrip.
+        Order orderEntity = orderRepository.findByIdJoinFetch(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + id));
 
-        List<OrderDetailEntity> detailEntities = orderDetailRepository.findByOrderId(id);
         List<OrderDetailDTO> detailDTOs = new ArrayList<>();
-        for (OrderDetailEntity d : detailEntities) {
+        for (OrderDetail d : orderEntity.getOrderDetails()) {
             detailDTOs.add(new OrderDetailDTO(d.getOrderId(), d.getItemCode(), d.getQty(), d.getUnitPrice()));
         }
         return new OrderDTO(orderEntity.getOrderId(), orderEntity.getDate(), orderEntity.getCustomerId(), detailDTOs);
@@ -152,15 +171,25 @@ public class OrderService {
     @Transactional(readOnly = true)
     public List<OrderDTO> findAllOrders() {
         List<OrderDTO> dtos = new ArrayList<>();
-        for (OrderEntity orderEntity : orderRepository.findAll()) {
-            List<OrderDetailEntity> detailEntities = orderDetailRepository.findByOrderId(orderEntity.getOrderId());
+        // JOIN FETCH loads each order with its details and avoids per-order follow-up queries.
+        for (Order orderEntity : orderRepository.findAllJoinFetch()) {
             List<OrderDetailDTO> detailDTOs = new ArrayList<>();
-            for (OrderDetailEntity d : detailEntities) {
+            for (OrderDetail d : orderEntity.getOrderDetails()) {
                 detailDTOs.add(new OrderDetailDTO(d.getOrderId(), d.getItemCode(), d.getQty(), d.getUnitPrice()));
             }
             dtos.add(new OrderDTO(orderEntity.getOrderId(), orderEntity.getDate(), orderEntity.getCustomerId(), detailDTOs));
         }
         return dtos;
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderSummaryProjection> findOrderSummaries() {
+        return orderRepository.findOrderSummaries();
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderSummaryDTO> findOrderSummariesDto() {
+        return orderRepository.findOrderSummariesDto();
     }
 
     /**
@@ -190,7 +219,7 @@ public class OrderService {
      * In a real system, this would use database sequences or UUID
      */
     private String generateOrderId() {
-        List<OrderEntity> allOrders = orderRepository.findAll();
+        List<Order> allOrders = orderRepository.findAll();
         return "O" + (allOrders.size() + 1);
     }
 }

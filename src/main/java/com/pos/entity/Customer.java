@@ -9,7 +9,29 @@ import jakarta.persistence.*;
  */
 @Entity
 @Table(name = "customers")
-public class CustomerEntity {
+@NamedQueries({
+        @NamedQuery(
+                name = "Customer.findByEmail",
+                query = "SELECT c FROM Customer c WHERE c.email = :email"
+        ),
+        @NamedQuery(
+                name = "Customer.findAllOrderByName",
+                query = "SELECT c FROM Customer c ORDER BY c.name"
+        )
+})
+@NamedNativeQueries({
+        @NamedNativeQuery(
+                name = "Customer.findByEmailNative",
+                query = "SELECT * FROM customers WHERE email = :email",
+                resultClass = Customer.class
+        ),
+        @NamedNativeQuery(
+                name = "Customer.findAllNativeOrderByName",
+                query = "SELECT * FROM customers ORDER BY name",
+                resultClass = Customer.class
+        )
+})
+public class Customer {
 
     @Id
     @Column(name = "id", length = 10)
@@ -24,9 +46,9 @@ public class CustomerEntity {
     @Column(name = "email", length = 150)
     private String email;
 
-    public CustomerEntity() {}
+    public Customer() {}
 
-    public CustomerEntity(String id, String name, String address, String email) {
+    public Customer(String id, String name, String address, String email) {
         this.id = id;
         this.name = name;
         this.address = address;
@@ -45,3 +67,4 @@ public class CustomerEntity {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 }
+

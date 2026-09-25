@@ -38,6 +38,20 @@
       <version>${spring.version}</version>
     </dependency>
 
+    <!-- Spring AOP for @Aspect, pointcuts, and proxy-based cross-cutting logic -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-aop</artifactId>
+      <version>${spring.version}</version>
+    </dependency>
+
+    <!-- AspectJ APIs used by @Aspect classes (org.aspectj.lang.*) -->
+    <dependency>
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjweaver</artifactId>
+      <version>1.9.22.1</version>
+    </dependency>
+
     <!-- Spring ORM (Object-Relational Mapping) support -->
     <dependency>
       <groupId>org.springframework</groupId>

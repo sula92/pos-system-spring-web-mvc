@@ -5,7 +5,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * Composite Primary Key for OrderDetailEntity
+ * Composite Primary Key for OrderDetail
  * Represents the combination of order_id and item_code as a single primary key.
  */
 @Embeddable

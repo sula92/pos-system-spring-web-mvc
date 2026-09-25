@@ -1,7 +1,10 @@
 package com.pos.service;
 
 import com.pos.dto.CustomerDTO;
-import com.pos.entity.CustomerEntity;
+import com.pos.dto.CustomerPurchaseStatsDTO;
+import com.pos.entity.Customer;
+import com.pos.exception.ResourceNotFoundException;
+import com.pos.projection.CustomerPurchaseStatsProjection;
 import com.pos.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,9 +33,9 @@ public class CustomerService {
      */
     public CustomerDTO saveCustomer(CustomerDTO dto) {
         logger.info("Service: Saving customer: " + dto.getName());
-        CustomerEntity entity = new CustomerEntity(
+        Customer entity = new Customer(
                 dto.getId(), dto.getName(), dto.getAddress(), dto.getEmail());
-        CustomerEntity saved = customerRepository.save(entity);
+        Customer saved = customerRepository.save(entity);
         logger.info("Service: Customer saved successfully with ID: " + saved.getId());
         return new CustomerDTO(saved.getId(), saved.getName(), saved.getAddress(), saved.getEmail());
     }
@@ -42,9 +45,12 @@ public class CustomerService {
      */
     public CustomerDTO updateCustomer(CustomerDTO dto) {
         logger.info("Service: Updating customer: " + dto.getId());
-        CustomerEntity entity = new CustomerEntity(
+        if (!customerRepository.existsById(dto.getId())) {
+            throw new ResourceNotFoundException("Customer not found: " + dto.getId());
+        }
+        Customer entity = new Customer(
                 dto.getId(), dto.getName(), dto.getAddress(), dto.getEmail());
-        CustomerEntity updated = customerRepository.save(entity);
+        Customer updated = customerRepository.save(entity);
         logger.info("Service: Customer updated successfully: " + dto.getId());
         return new CustomerDTO(updated.getId(), updated.getName(), updated.getAddress(), updated.getEmail());
     }
@@ -54,6 +60,9 @@ public class CustomerService {
      */
     public void deleteCustomer(String id) {
         logger.info("Service: Deleting customer: " + id);
+        if (!customerRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Customer not found: " + id);
+        }
         customerRepository.deleteById(id);
         logger.info("Service: Customer deleted successfully: " + id);
     }
@@ -65,7 +74,7 @@ public class CustomerService {
     public CustomerDTO findCustomer(String id) {
         return customerRepository.findById(id)
                 .map(entity -> new CustomerDTO(entity.getId(), entity.getName(), entity.getAddress(), entity.getEmail()))
-                .orElse(null);
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + id));
     }
 
     /**
@@ -75,10 +84,36 @@ public class CustomerService {
     public List<CustomerDTO> findAllCustomers() {
         logger.info("Service: Fetching all customers");
         List<CustomerDTO> dtos = new ArrayList<>();
-        for (CustomerEntity entity : customerRepository.findAll()) {
+        for (Customer entity : customerRepository.findAll()) {
             dtos.add(new CustomerDTO(entity.getId(), entity.getName(), entity.getAddress(), entity.getEmail()));
         }
         return dtos;
+    }
+
+    @Transactional(readOnly = true)
+    public List<CustomerPurchaseStatsProjection> findCustomerPurchaseStats() {
+        return customerRepository.findCustomerPurchaseStats();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CustomerPurchaseStatsDTO> findCustomerPurchaseStatsDto() {
+        return customerRepository.findCustomerPurchaseStatsDto();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CustomerDTO> searchCustomersByName(String namePart) {
+        List<CustomerDTO> dtos = new ArrayList<>();
+        for (Customer entity : customerRepository.findByNameContainingIgnoreCase(namePart)) {
+            dtos.add(new CustomerDTO(entity.getId(), entity.getName(), entity.getAddress(), entity.getEmail()));
+        }
+        return dtos;
+    }
+
+    @Transactional(readOnly = true)
+    public CustomerDTO findCustomerByEmail(String email) {
+        Customer customer = customerRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found with email: " + email));
+        return new CustomerDTO(customer.getId(), customer.getName(), customer.getAddress(), customer.getEmail());
     }
 }
 
