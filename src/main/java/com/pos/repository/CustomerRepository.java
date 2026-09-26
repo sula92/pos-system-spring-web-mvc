@@ -15,17 +15,19 @@ import java.util.Optional;
  * Provides CRUD operations and custom queries for Customer entities.
  * Hibernate handles SQL generation automatically.
  */
+// `@Repository` marks this as a Spring Data bean.
+// The repository works with `Customer` entities and `String` primary keys.
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, String> {
-    // JpaRepository provides: save, update, delete, findById, findAll automatically
-    // Additional custom queries can be added here using @Query annotations if needed
+    // The base interface already provides save/find/delete methods.
 
-    // Derived query examples (no @Query annotation required).
+    // Spring Data creates the query from the method name.
     List<Customer> findByNameContainingIgnoreCase(String namePart);
 
     Optional<Customer> findByEmailIgnoreCase(String email);
 
-    // Native projection for customer-level order and spending metrics.
+    // Native projection for customer order/spending stats.
+    // The aliases in the SQL must match the projection property names.
     @Query(value = "SELECT c.id AS customerId, " +
             "c.name AS customerName, " +
             "c.email AS email, " +
@@ -38,7 +40,7 @@ public interface CustomerRepository extends JpaRepository<Customer, String> {
             "ORDER BY c.name", nativeQuery = true)
     List<CustomerPurchaseStatsProjection> findCustomerPurchaseStats();
 
-    // DTO constructor projection alternative with JPQL.
+    // DTO constructor projection version of the same summary data.
     @Query("SELECT new com.pos.dto.CustomerPurchaseStatsDTO(" +
             "c.id, " +
             "c.name, " +
