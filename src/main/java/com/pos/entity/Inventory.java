@@ -9,16 +9,19 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "inventory")
 @NamedQueries({
+        // JPQL query: list only items that are currently in stock.
         @NamedQuery(
                 name = "Inventory.findInStock",
                 query = "SELECT i FROM Inventory i WHERE i.qty > 0 ORDER BY i.itemCode"
         ),
+        // JPQL query: find one inventory row by its item code.
         @NamedQuery(
                 name = "Inventory.findByItemCode",
                 query = "SELECT i FROM Inventory i WHERE i.itemCode = :itemCode"
         )
 })
 @NamedNativeQueries({
+        // Native SQL version for exact table-column control.
         @NamedNativeQuery(
                 name = "Inventory.findInStockNative",
                 query = "SELECT * FROM inventory WHERE qty_on_hand > 0 ORDER BY item_code",
@@ -32,13 +35,17 @@ import jakarta.persistence.*;
 })
 public class Inventory {
 
+    // Primary key column; this also matches the foreign key to Item.
     @Id
     @Column(name = "item_code", length = 10)
     private String itemCode;
 
+    // Quantity on hand in the database, mapped to the shorter Java field name `qty`.
     @Column(name = "qty_on_hand", nullable = false)
     private int qty;
 
+    // `@MapsId` means this row shares the same primary key value as the linked Item.
+    // This is the shared-primary-key pattern used for one-to-one stock records.
     @MapsId
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_code")

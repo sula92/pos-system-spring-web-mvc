@@ -17,44 +17,45 @@ import java.util.Optional;
  * Provides CRUD operations and custom queries for Order entities.
  * Hibernate handles SQL generation automatically.
  */
+// `@Repository` makes this interface a Spring bean.
+// The generic type `<Order, String>` means the entity is `Order` and the primary key is `String`.
 @Repository
 public interface OrderRepository extends JpaRepository<Order, String> {
-    // JpaRepository provides: save, update, delete, findById, findAll automatically
-    // The generic parameter <Order, String> indicates String is the primary key type
+    // JpaRepository already gives basic CRUD methods, so we only add custom reads here.
 
-    // Uses a named entity graph to fetch orderDetails with the order in one query.
+    // `@EntityGraph` tells JPA to load the `orderDetails` relationship with the order.
+    // `EntityGraphType.LOAD` keeps the entity's normal fetch rules but adds this extra path.
     @EntityGraph(value = "Order.withDetails", type = EntityGraph.EntityGraphType.LOAD)
     @Query("SELECT o FROM Order o WHERE o.orderId = :orderId")
     Optional<Order> findByIdWithDetailsGraph(@Param("orderId") String orderId);
 
-    // Attribute-path graph variant for fetching detail collections when loading all orders.
+    // This version uses `attributePaths` so we can define the graph directly in the repository.
     @EntityGraph(attributePaths = {"orderDetails"})
     @Query("SELECT o FROM Order o")
     List<Order> findAllWithDetailsGraph();
 
-    //when you want to fetch order details with the order in one query.
-    // JOIN FETCH removes N+1 selects by loading orders and their details in one query.
+    // `JOIN FETCH` loads the parent order and its details in one query.
+    // `DISTINCT` removes duplicate parent rows that can appear in a one-to-many join.
     @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails WHERE o.orderId = :orderId")
     Optional<Order> findByIdJoinFetch(@Param("orderId") String orderId);
 
-    //when you want to fetch order details with the order in one query.
-    // JOIN FETCH for bulk reads; DISTINCT avoids duplicate parent rows in the result list.
+    // Bulk read version of the same fetch strategy.
     @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.orderDetails")
     List<Order> findAllJoinFetch();
 
-    // Native SQL by primary key; useful when you need vendor-specific SQL debugging.
+    // Native SQL is useful when we want to inspect or debug the exact table structure.
     @Query(value = "SELECT * FROM orders WHERE order_id = :orderId", nativeQuery = true)
     Optional<Order> findByIdNative(@Param("orderId") String orderId);
 
-    // Native SQL ordered read for reporting-style screens.
+    // Another native query, this time for a simple ordered list.
     @Query(value = "SELECT * FROM orders ORDER BY date DESC", nativeQuery = true)
     List<Order> findAllNativeOrderByDateDesc();
 
-    // Native aggregate query to quickly count orders for a customer.
+    // Native aggregate query: count orders for one customer directly in SQL.
     @Query(value = "SELECT COUNT(*) FROM orders WHERE customer_id = :customerId", nativeQuery = true)
     long countByCustomerIdNative(@Param("customerId") String customerId);
 
-    // Projection query that returns a report-style shape instead of Order entities.
+    // Interface-based projection: return only the summary columns, not full `Order` entities.
     @Query("SELECT o.orderId AS orderId, " +
             "o.date AS orderDate, " +
             "o.customerId AS customerId, " +
@@ -66,7 +67,7 @@ public interface OrderRepository extends JpaRepository<Order, String> {
             "ORDER BY o.date DESC")
     List<OrderSummaryProjection> findOrderSummaries();
 
-    // Constructor DTO projection alternative to interface-based projection.
+    // DTO constructor projection: JPA creates `OrderSummaryDTO` objects directly.
     @Query("SELECT new com.pos.dto.OrderSummaryDTO(" +
             "o.orderId, " +
             "o.date, " +

@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 public class OrderController {
 
     private static final Logger logger = Logger.getLogger(OrderController.class.getName());
+    // Order IDs are expected to look like O001, O002, O123, etc.
     private static final Pattern ORDER_ID_PATTERN = Pattern.compile("^O\\d{3}$");
 
     @Autowired
@@ -30,6 +31,7 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<?> getOrders(@RequestParam(name = "id", required = false) String id) {
         if (id != null) {
+            // If the client asks for one order, make sure the ID format is valid first.
             if (!ORDER_ID_PATTERN.matcher(id).matches()) {
                 logger.warning("Invalid order ID format: " + id);
                 throw new InvalidRequestException("Invalid order ID format. Expected format: O followed by 3 digits (e.g. O001)");
@@ -45,7 +47,7 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody OrderDTO dto) {
         logger.info("Attempting to place new order");
-        // Set default date if not provided
+        // If the client does not send a date, use today so the order still has a valid date.
         if (dto.getDate() == null) {
             dto.setDate(LocalDate.now());
         }
@@ -59,11 +61,13 @@ public class OrderController {
 
     @GetMapping("/summary")
     public ResponseEntity<List<OrderSummaryProjection>> getOrderSummaries() {
+        // Projection endpoint: returns a lightweight report view instead of full order entities.
         return ResponseEntity.ok(orderService.findOrderSummaries());
     }
 
     @GetMapping("/summary-dto")
     public ResponseEntity<List<OrderSummaryDTO>> getOrderSummariesDto() {
+        // Same report data, but mapped into a DTO class.
         return ResponseEntity.ok(orderService.findOrderSummariesDto());
     }
 

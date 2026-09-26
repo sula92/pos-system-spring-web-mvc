@@ -13,16 +13,19 @@ import java.util.List;
 @Entity
 @Table(name = "orders")
 @NamedQueries({
+		// JPQL query: fetch orders for one customer, newest first.
 		@NamedQuery(
 				name = "Order.findByCustomerId",
 				query = "SELECT o FROM Order o WHERE o.customerId = :customerId ORDER BY o.date DESC"
 		),
+		// JPQL query: find orders created on or after a specific date.
 		@NamedQuery(
 				name = "Order.findRecent",
 				query = "SELECT o FROM Order o WHERE o.date >= :fromDate ORDER BY o.date DESC"
 		)
 })
 @NamedNativeQueries({
+		// Native SQL versions when exact table/column access is preferred.
 		@NamedNativeQuery(
 				name = "Order.findByCustomerIdNative",
 				query = "SELECT * FROM orders WHERE customer_id = :customerId ORDER BY date DESC",
@@ -35,6 +38,7 @@ import java.util.List;
 		)
 })
 @NamedEntityGraphs({
+		// Entity graph used when we want an Order plus its detail rows in one fetch plan.
 		@NamedEntityGraph(
 				name = "Order.withDetails",
 				attributeNodes = @NamedAttributeNode("orderDetails")
@@ -52,7 +56,9 @@ public class Order {
 	@Column(name = "customer_id", length = 10, nullable = false)
 	private String customerId;
 
-	// Relationship to Order Details
+	// One order can contain many detail rows.
+	// `cascade = ALL` saves/removes child rows with the parent, and `orphanRemoval = true` deletes
+	// detail rows that are removed from the collection.
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<OrderDetail> orderDetails = new ArrayList<>();
 

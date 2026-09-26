@@ -26,6 +26,7 @@ public class AuditAspect {
      * Read-only methods are excluded to keep logs focused and compact.
      */
     @AfterReturning(
+            // Match service methods that change data, plus order placement and inventory creation.
             "execution(* com.pos.service..save*(..)) || " +
             "execution(* com.pos.service..update*(..)) || " +
             "execution(* com.pos.service..delete*(..)) || " +
@@ -33,6 +34,7 @@ public class AuditAspect {
             "execution(* com.pos.service.InventoryService.createInventory(..))"
     )
     public void logAuditEvent(JoinPoint joinPoint) {
+        // Only successful calls reach this method because of @AfterReturning.
         String method = joinPoint.getSignature().toShortString();
         logger.info("[AOP-AUDIT] " + method + " succeeded at " + Instant.now());
     }

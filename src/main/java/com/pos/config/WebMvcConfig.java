@@ -36,9 +36,11 @@ import java.util.Map;
 @Configuration
 @EnableWebMvc
 @EnableAspectJAutoProxy
-@EnableTransactionManagement  // Enable @Transactional annotation processing. //without this annotation, @Transactional will not work
+// This turns on Spring's transaction support so @Transactional methods actually work.
+@EnableTransactionManagement
 @ComponentScan("com.pos")
-@EnableJpaRepositories("com.pos.repository")  // Enable Spring Data JPA repository scanning. without this annotation, @Repository will not work
+// This tells Spring Data where to find repository interfaces like OrderRepository.
+@EnableJpaRepositories("com.pos.repository")
 @PropertySource("classpath:application.properties")
 public class WebMvcConfig {
 
@@ -69,7 +71,8 @@ public class WebMvcConfig {
     @Value("${spring.jpa.properties.hibernate.use_sql_comments:true}")
     private boolean useSqlComments;
 
-    // Enables ${...} placeholder resolution for @Value in non-Boot Spring MVC config.
+    // Spring MVC does not auto-load property placeholders the way Spring Boot does,
+    // so this bean makes @Value("${...}") work in this legacy-style configuration.
     @Bean
     public static org.springframework.context.support.PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
         return new org.springframework.context.support.PropertySourcesPlaceholderConfigurer();
@@ -82,6 +85,7 @@ public class WebMvcConfig {
     //Datasource is a bean that provides a connection to the database and is used by the EntityManagerFactory
     @Bean
     public DataSource dataSource() {
+        // DriverManagerDataSource is simple and fine for a small demo or local setup.
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName(dbDriver);
         dataSource.setUrl(dbUrl);
@@ -98,17 +102,19 @@ public class WebMvcConfig {
     //LocalContainerEntityManagerFactoryBean is a bean that provides a container for the EntityManagerFactory. without this bean, @Repository will not work
     @Bean
     public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource) {
+        // The EntityManagerFactory creates the JPA session factory used by Hibernate.
         LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();
         emf.setDataSource(dataSource);
-        emf.setPackagesToScan("com.pos.entity");  // Scan for @Entity classes
+        // Scan the package that contains all @Entity classes.
+        emf.setPackagesToScan("com.pos.entity");
         
         HibernateJpaVendorAdapter adapter = new HibernateJpaVendorAdapter();
         emf.setJpaVendorAdapter(adapter);
         
-        // Hibernate configuration properties
+        // Extra Hibernate settings are passed here so table creation and SQL logging behave as expected.
         Map<String, Object> properties = new HashMap<>();
         properties.put("hibernate.dialect", hibernateDialect);
-        properties.put("hibernate.ddl-auto", hibernateDdlAuto);  // Automatically create/drop tables
+        properties.put("hibernate.ddl-auto", hibernateDdlAuto);
         properties.put("hibernate.show_sql", showSql);
         properties.put("hibernate.format_sql", formatSql);
         properties.put("hibernate.use_sql_comments", useSqlComments);
@@ -137,6 +143,7 @@ No @Transactional: Methods run without transaction boundaries (no automatic roll
     * */
     @Bean
     public PlatformTransactionManager transactionManager(EntityManagerFactory emf) {
+        // JpaTransactionManager connects Spring's transaction annotations to Hibernate/JPA.
         return new JpaTransactionManager(emf);
     }
 
@@ -148,6 +155,7 @@ No @Transactional: Methods run without transaction boundaries (no automatic roll
     //we dont use it here because we are using REST API (no JSP views).
     @Bean
     public ViewResolver viewResolver() {
+        // Kept only for compatibility with JSP-style MVC views.
         InternalResourceViewResolver resolver = new InternalResourceViewResolver();
         resolver.setPrefix("/WEB-INF/views/");
         resolver.setSuffix(".jsp");

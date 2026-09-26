@@ -13,26 +13,32 @@ import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 
+// `@Repository` marks this interface as a Spring Data repository bean.
+// `JpaRepository<Inventory, String>` means this repository works with `Inventory`
+// entities and the primary key type is `String`.
 @Repository
 public interface InventoryRepository extends JpaRepository<Inventory, String> {
 
-    // Derived query examples (no @Query annotation required).
+    // Spring Data reads the method name and builds the query automatically.
     List<Inventory> findByQtyGreaterThanOrderByQtyDesc(int minQty);
 
     List<Inventory> findByQtyLessThanEqualOrderByQtyAsc(int maxQty);
 
+    // `@Query` lets us write the JPQL directly when the method name would be too long.
     @Query("SELECT i FROM Inventory i ORDER BY i.itemCode")
     List<Inventory> findAllOrderByItemCode();
 
-    //pessimistic lock is used to prevent concurrent updates. it locks the row during the transaction where as optimistic lock uses versioning.
+    // `@Lock(PESSIMISTIC_WRITE)` blocks other transactions from changing the same row
+    // until this transaction finishes, which helps prevent stock race conditions.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT i FROM Inventory i WHERE i.itemCode = :itemCode")
     Optional<Inventory> findByItemCodeForUpdate(@Param("itemCode") String itemCode);
 
+    // Native SQL is used here because the query works directly on the database table.
     @Query(value = "SELECT * FROM inventory WHERE qty_on_hand > 0 ORDER BY item_code", nativeQuery = true)
     List<Inventory> findInStockNative();
 
-    // Projection query for stock dashboards with item info and inventory value calculation.
+    // Interface projection: only the selected columns are returned, not the full entity.
     @Query("SELECT inv.itemCode AS itemCode, " +
             "it.description AS description, " +
             "it.unitPrice AS unitPrice, " +
@@ -42,7 +48,7 @@ public interface InventoryRepository extends JpaRepository<Inventory, String> {
             "ORDER BY it.description")
     List<InventoryStockViewProjection> findInventoryStockViews();
 
-    // Record projection alternative for a stable API/report output format.
+    // DTO version of the same dashboard data.
     @Query("SELECT new com.pos.dto.InventoryStockValueView(" +
             "inv.itemCode, " +
             "it.description, " +

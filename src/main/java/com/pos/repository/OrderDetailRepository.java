@@ -14,32 +14,35 @@ import java.util.List;
  * Provides CRUD operations and custom queries for OrderDetail entities.
  * Hibernate handles SQL generation automatically.
  */
+// `@Repository` makes this interface a Spring bean.
+// `JpaRepository<OrderDetail, OrderDetailId>` uses the composite key class as the ID type.
 @Repository
 public interface OrderDetailRepository extends JpaRepository<OrderDetail, OrderDetailId> {
-    // JpaRepository provides: save, update, delete, findById, findAll automatically
+    // JpaRepository already gives the basic CRUD methods.
 
     /**
      * Find all order details for a specific order ID
      * @param orderId The order ID to search for
      * @return List of order details for the given order
      */
+    // JPQL query for fetching all detail rows for one order.
     @Query("SELECT od FROM OrderDetail od WHERE od.id.orderId = :orderId ORDER BY od.id.itemCode")
     List<OrderDetail> findByOrderId(@Param("orderId") String orderId);
 
-    // Graph-based fetch to force loading the parent order with each detail.
+    // `@EntityGraph` tells JPA to also load the parent `Order` when each detail is fetched.
     @EntityGraph(attributePaths = {"order"})
     @Query("SELECT od FROM OrderDetail od WHERE od.id.orderId = :orderId ORDER BY od.id.itemCode")
     List<OrderDetail> findByOrderIdWithOrderGraph(@Param("orderId") String orderId);
 
-    // JOIN FETCH variant for single-query retrieval of details and their parent order.
+    // `JOIN FETCH` is the explicit join version of the same idea.
     @Query("SELECT od FROM OrderDetail od JOIN FETCH od.order WHERE od.id.orderId = :orderId ORDER BY od.id.itemCode")
     List<OrderDetail> findByOrderIdJoinFetchOrder(@Param("orderId") String orderId);
 
-    // Native SQL equivalent of findByOrderId for direct table-level troubleshooting.
+    // Native SQL version for cases where we want to inspect the exact table columns.
     @Query(value = "SELECT * FROM order_details WHERE order_id = :orderId ORDER BY item_code", nativeQuery = true)
     List<OrderDetail> findByOrderIdNative(@Param("orderId") String orderId);
 
-    // Native aggregate query for simple sales analytics per item.
+    // Native aggregate query to total quantity by item code.
     @Query(value = "SELECT COALESCE(SUM(qty), 0) FROM order_details WHERE item_code = :itemCode", nativeQuery = true)
     int sumOrderedQtyByItemCodeNative(@Param("itemCode") String itemCode);
 }

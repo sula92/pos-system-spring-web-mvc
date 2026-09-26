@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 public class PerformanceAspect {
 
     private static final Logger logger = Logger.getLogger(PerformanceAspect.class.getName());
+    // Calls slower than this will be highlighted as warnings.
     private static final long SLOW_THRESHOLD_MS = 200L;
 
     /**
@@ -28,10 +29,13 @@ public class PerformanceAspect {
      */
     @Around("execution(* com.pos.controller..*(..)) || execution(* com.pos.service..*(..))")
     public Object measureExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
+        // Start timing right before the method runs.
         long startedAt = System.currentTimeMillis();
         try {
+            // Proceed with the original method call.
             return joinPoint.proceed();
         } finally {
+            // Measure how long the whole call took, even if the method throws an error.
             long elapsedMs = System.currentTimeMillis() - startedAt;
             String signature = joinPoint.getSignature().toShortString();
 

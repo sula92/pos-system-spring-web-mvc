@@ -80,7 +80,8 @@ public class OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + dto.getCustomerId()));
         logger.info("Service: Customer found: " + customer.getId());
 
-        // VALIDATION: Aggregate quantities per item first to prevent duplicate-line overselling.
+        // If the same item appears more than once, add its quantities together first.
+        // That way we check stock against the real total before saving anything.
         Map<String, Integer> requestedQtyByItem = new HashMap<>();
         for (OrderDetailDTO detail : dto.getOrderDetails()) {
             if (!isValidOrderDetail(detail)) {
@@ -99,7 +100,7 @@ public class OrderService {
             String itemCode = requestedQty.getKey();
             int totalRequestedQty = requestedQty.getValue();
 
-            // Lock inventory rows while checking stock so concurrent orders cannot oversell.
+            // Lock the inventory row while we check it so two orders cannot reduce the same stock at once.
             Inventory inventory = inventoryRepository.findByItemCodeForUpdate(itemCode)
                     .orElseThrow(() -> new ResourceNotFoundException("Inventory not found for item: " + itemCode));
 
@@ -122,7 +123,8 @@ public class OrderService {
         Order savedOrder = orderRepository.save(orderEntity);
         logger.info("Service: Order record saved: " + savedOrder.getOrderId());
 
-        // PROCESS: Save each order detail and update item stock
+        // Save each order detail and reduce stock in the same transaction.
+        // If any save fails, Spring rolls back the whole order.
         for (OrderDetailDTO detail : dto.getOrderDetails()) {
             detail.setOrderId(savedOrder.getOrderId());
 
@@ -132,7 +134,7 @@ public class OrderService {
             orderDetailRepository.save(detailEntity);
             logger.info("Service: Order detail saved: " + savedOrder.getOrderId() + " - " + detail.getItemCode());
 
-            // UPDATE: Deduct stock from the Inventory table in the same transaction.
+            // Reduce the in-memory inventory value, then persist the change.
             Inventory inventory = inventoryCache.get(detail.getItemCode());
             inventory.setQty(inventory.getQty() - detail.getQty());
             inventoryRepository.save(inventory);
@@ -154,7 +156,7 @@ public class OrderService {
      */
     @Transactional(readOnly = true)
     public OrderDTO findOrder(String id) {
-        // Uses JOIN FETCH query so order + details are loaded in one roundtrip.
+        // JOIN FETCH loads the order and its details together instead of making extra queries later.
         Order orderEntity = orderRepository.findByIdJoinFetch(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + id));
 
@@ -171,7 +173,7 @@ public class OrderService {
     @Transactional(readOnly = true)
     public List<OrderDTO> findAllOrders() {
         List<OrderDTO> dtos = new ArrayList<>();
-        // JOIN FETCH loads each order with its details and avoids per-order follow-up queries.
+        // This avoids the N+1 query problem when converting many orders to DTOs.
         for (Order orderEntity : orderRepository.findAllJoinFetch()) {
             List<OrderDetailDTO> detailDTOs = new ArrayList<>();
             for (OrderDetail d : orderEntity.getOrderDetails()) {

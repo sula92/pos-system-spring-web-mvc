@@ -5,13 +5,18 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * Composite Primary Key for OrderDetail
- * Represents the combination of order_id and item_code as a single primary key.
+ * Composite primary key for `OrderDetail`.
+ *
+ * `order_id + item_code` together identify one row, because one order can contain
+ * the same item only once in this design.
  */
+// `@Embeddable` means this ID class can be embedded inside another entity.
 @Embeddable
 public class OrderDetailId implements Serializable {
 
+    // The order this line item belongs to.
     private String orderId;
+    // The item being sold in this line item.
     private String itemCode;
 
     public OrderDetailId() {}
@@ -29,6 +34,7 @@ public class OrderDetailId implements Serializable {
 
     @Override
     public boolean equals(Object o) {
+        // Composite keys must compare both fields so Hibernate can match rows correctly.
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OrderDetailId that = (OrderDetailId) o;
@@ -37,6 +43,7 @@ public class OrderDetailId implements Serializable {
 
     @Override
     public int hashCode() {
+        // hashCode must use the same fields as equals.
         return Objects.hash(orderId, itemCode);
     }
 }
